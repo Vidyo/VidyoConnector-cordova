@@ -14,7 +14,7 @@ This is a Vidyo.io Android and iOS plugin for Cordova. This plugin is built usin
       
  OR,
  
-      cordova plugin add https://github.com/Vidyo/VidyoConnector-cordova.git
+      cordova plugin add https://github.com/Vidyo/vidyo.io-connector-cordova.git
       
 
 
@@ -42,7 +42,7 @@ Here we demontrate how to create a sample Cordova project and import the VidyoIO
       $ cordova plugin add <plugin-path>  
  OR,
       
-      $ cordova plugin add https://github.com/Vidyo/VidyoIOCordovaPlugin.git
+      $ cordova plugin add https://github.com/Vidyo/vidyo.io-connector-cordova.git
       
 This step copies all the relevant files from the plugin folder to the Cordova project folder. It also merges the information related to permissions in to the AndroidManifest.xml. This step should complete without any errors.
 
