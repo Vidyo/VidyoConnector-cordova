@@ -1,4 +1,4 @@
-# VidyoIOCordovaPlugin
+# vidyo.io-connector-cordova
 
 This is a Vidyo.io Android and iOS plugin for Cordova. This plugin is built using the Vidyo.io Android sample available @ https://vidyo.io. 
 
