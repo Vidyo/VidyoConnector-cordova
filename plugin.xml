@@ -39,7 +39,8 @@
 		<source-file src="src/android/com/vidyo/vidyoconnector/VidyoIOActivity.java" target-dir="src/com/vidyo/vidyoconnector" />
 		<source-file src="src/android/com/vidyo/vidyoconnector/VidyoConnector.java" target-dir="src/com/vidyo/vidyoconnector" />
 		<source-file src="src/android/com/vidyo/vidyoconnector/Logger.java" target-dir="src/com/vidyo/vidyoconnector" />
-		
+		<source-file src="src/android/com/vidyo/vidyoconnector/EventAction.java" target-dir="src/com/vidyo/vidyoconnector" />
+
 		<source-file src="src/android/lib/android/vidyoclient.jar" target-dir="libs" />
         <source-file src="src/android/lib/android/arm64-v8a/libVidyoClient.so" target-dir="libs/arm64-v8a" />
 		<source-file src="src/android/lib/android/armeabi-v7a/libVidyoClient.so" target-dir="libs/armeabi-v7a" />
@@ -71,7 +72,8 @@
 		<source-file src="src/android/res/values/styles.xml" target-dir="res/values" />
 		<source-file src="src/android/res/values-w820dp/dimens.xml" target-dir="res/values-w820dp" />
 
-		<framework src="com.android.support:appcompat-v7:23.0.0" />		
+		<framework src="com.android.support:appcompat-v7:23.0.0" />	
+		<framework src="org.greenrobot:eventbus:3.1.1" />
 	</platform>
 
 	<platform name="ios">

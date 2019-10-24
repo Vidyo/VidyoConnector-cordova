@@ -1,26 +1,33 @@
 package com.vidyo.plugin;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.util.Log;
+import android.widget.Toast;
 
-import org.apache.cordova.CordovaPlugin;
+import com.vidyo.vidyoconnector.EventAction;
+import com.vidyo.vidyoconnector.VidyoIOActivity;
+
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.vidyo.vidyoconnector.VidyoIOActivity;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.widget.Toast;
 
 /**
  * This class echoes a string called from JavaScript.
  */
 public class VidyoIOPlugin extends CordovaPlugin {
+
+    private static final String TAG = "VidyoIOPlugin";
 
     private static final int PERMISSION_REQ_CODE = 0x7b;
 
@@ -32,6 +39,8 @@ public class VidyoIOPlugin extends CordovaPlugin {
 
     private JSONArray launchVidyoIOArguments;
 
+    private CallbackContext pluginCallback;
+
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
     }
@@ -39,10 +48,25 @@ public class VidyoIOPlugin extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         if (action.equals("launchVidyoIO")) {
+
+            /* Register to vidyo activity events */
+            EventBus.getDefault().register(this);
+
+            /* Store JS callback point */
+            this.pluginCallback = callbackContext;
+
             this.openNewActivity(args);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        /* Unregister from vidyo activity events */
+        EventBus.getDefault().unregister(this);
     }
 
     private void openNewActivity(JSONArray args) throws JSONException {
@@ -66,6 +90,19 @@ public class VidyoIOPlugin extends CordovaPlugin {
         this.cordova.getActivity().startActivity(intent);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onVidyoEvent(EventAction eventAction) {
+        if (pluginCallback != null) {
+            PluginResult result = new PluginResult(PluginResult.Status.OK, eventAction.getJsonBody());
+            result.setKeepCallback(true);
+            pluginCallback.sendPluginResult(result);
+
+            Log.i(TAG, "Event reported: " + eventAction.getJsonBody());
+        } else {
+            Log.e(TAG, "JS callback context is null.");
+        }
+    }
+    
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
         if (requestCode == PERMISSION_REQ_CODE) {

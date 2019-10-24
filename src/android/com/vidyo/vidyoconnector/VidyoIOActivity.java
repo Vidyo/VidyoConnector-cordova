@@ -1,17 +1,10 @@
 package com.vidyo.vidyoconnector;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.app.ActivityCompat;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
@@ -22,15 +15,15 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import com.vidyo.vidyoiohybrid.R;
-
 import com.vidyo.VidyoClient.Connector.Connector;
 import com.vidyo.VidyoClient.Connector.ConnectorPkg;
 import com.vidyo.VidyoClient.Device.Device;
 import com.vidyo.VidyoClient.Device.LocalCamera;
 import com.vidyo.VidyoClient.Endpoint.LogRecord;
 
-import static android.content.ContentValues.TAG;
+import com.vidyo.vidyoiohybrid.R;
+
+import org.greenrobot.eventbus.EventBus;
 
 public class VidyoIOActivity extends Activity implements Connector.IConnect, Connector.IRegisterLogEventListener, Connector.IRegisterLocalCameraEventListener {
 
@@ -384,13 +377,18 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
 
     // Toggle the microphone privacy
     public void MicrophonePrivacyButtonPressed(View v) {
-        mVidyoConnector.setMicrophonePrivacy(((ToggleButton) v).isChecked());
+        boolean privacy = ((ToggleButton) v).isChecked();
+        mVidyoConnector.setMicrophonePrivacy(privacy);
+
+        EventBus.getDefault().post(EventAction.reportEvent(EventAction.MIC_STATE_EVENT, privacy));
     }
 
     // Toggle the camera privacy
     public void CameraPrivacyButtonPressed(View v) {
         mIsCameraPrivacyOn = ((ToggleButton) v).isChecked();
         mVidyoConnector.setCameraPrivacy(mIsCameraPrivacyOn);
+
+        EventBus.getDefault().post(EventAction.reportEvent(EventAction.CAMERA_STATE_EVENT, mIsCameraPrivacyOn));
     }
 
     // Handle the camera swap button being pressed. Cycle the camera.
@@ -415,12 +413,16 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
 
     @Override
     public void onSuccess() {
+        EventBus.getDefault().post(EventAction.reportEvent(EventAction.CONNECTED_EVENT, null));
+
         mLogger.Log("OnSuccess: successfully connected.");
         ConnectorStateUpdated(VIDYO_CONNECTOR_STATE.VC_CONNECTED, "Connected");
     }
 
     @Override
     public void onFailure(Connector.ConnectorFailReason reason) {
+        EventBus.getDefault().post(EventAction.reportEvent(EventAction.FAILURE_EVENT, reason.name()));
+
         mLogger.Log("OnFailure: connection attempt failed, reason = " + reason.toString());
 
         // Update UI to reflect connection failed
@@ -429,6 +431,8 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
 
     @Override
     public void onDisconnected(Connector.ConnectorDisconnectReason reason) {
+        EventBus.getDefault().post(EventAction.reportEvent(EventAction.DISCONNECTED_EVENT, reason.name()));
+
         if (reason == Connector.ConnectorDisconnectReason.VIDYO_CONNECTORDISCONNECTREASON_Disconnected) {
             mLogger.Log("OnDisconnected: successfully disconnected, reason = " + reason.toString());
             ConnectorStateUpdated(VIDYO_CONNECTOR_STATE.VC_DISCONNECTED, "Disconnected");
