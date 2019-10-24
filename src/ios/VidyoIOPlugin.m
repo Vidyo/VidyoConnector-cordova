@@ -30,7 +30,28 @@
     }
 }
 
+- (void)passConnectEvent:(NSString*)event reason: (NSString*)reason  {
+    NSDictionary *payload = [NSDictionary dictionaryWithObjectsAndKeys: event, @"event", reason, @"reason", nil];
+    [self reportEvent: payload];
+}
+
+- (void)passDeviceStateEvent:(NSString*)event muted: (NSString*)muted  {
+    NSDictionary *payload = [NSDictionary dictionaryWithObjectsAndKeys: event, @"event", muted, @"muted", nil];
+    [self reportEvent: payload];
+}
+
+- (void)reportEvent:(NSDictionary*)payload {
+    CDVPluginResult* pluginResult = nil;
+    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:payload];
+    [pluginResult setKeepCallbackAsBool:YES];
+
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:pluginCommand.callbackId];
+}
+
 - (void)launchVidyoIO:(CDVInvokedUrlCommand *)command {
+    /* Store command for further reference */
+    pluginCommand = command;
+    
     NSString* token = [command.arguments objectAtIndex:0];
     NSString* host = [command.arguments objectAtIndex:1];
     NSString* displayName = [command.arguments objectAtIndex:2];
@@ -62,9 +83,9 @@
         
     if(self.vidyoViewController == nil) {
         self.vidyoViewController = [[VidyoViewController alloc] init];
-    
-        self.vidyoViewController.plugin = self;
     }
+    
+    self.vidyoViewController.plugin = self;
     
     [self.viewController presentViewController:self.vidyoViewController animated:YES completion:nil];
 }

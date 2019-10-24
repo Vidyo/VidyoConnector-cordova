@@ -2,12 +2,17 @@
 
 @class  VidyoViewController;
 
-@interface VidyoIOPlugin : CDVPlugin
+@interface VidyoIOPlugin : CDVPlugin {
+@private
+    CDVInvokedUrlCommand *pluginCommand;
+}
 
 @property (nonatomic, retain) VidyoViewController* vidyoViewController;
 
 - (void)launchVidyoIO:(CDVInvokedUrlCommand *)command;
 
+- (void)passConnectEvent:(NSString*)event reason: (NSString*)reason;
+- (void)passDeviceStateEvent:(NSString*)event muted: (NSString*)muted;
 
 - (void)destroy;
 

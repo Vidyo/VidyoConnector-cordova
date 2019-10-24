@@ -436,22 +436,26 @@
 - (IBAction)microphonePrivacyButtonPressed:(id)sender {
     microphonePrivacy = !microphonePrivacy;
     if (microphonePrivacy == NO) {
-        [microphonePrivacyButton setImage:[UIImage imageNamed:@"microphoneOnWhite.png"] forState:UIControlStateNormal];
+        [microphonePrivacyButton setImage:[UIImage imageNamed:@"microphoneonwhite.png"] forState:UIControlStateNormal];
     } else {
-        [microphonePrivacyButton setImage:[UIImage imageNamed:@"microphoneOff.png"] forState:UIControlStateNormal];
+        [microphonePrivacyButton setImage:[UIImage imageNamed:@"microphoneoff.png"] forState:UIControlStateNormal];
     }
     [vc setMicrophonePrivacy:microphonePrivacy];
+    
+    [plugin passDeviceStateEvent:@"MicrophoneStateUpdated" muted:microphonePrivacy ? @"YES" : @"NO"];
 }
     
     // Toggle the camera privacy
 - (IBAction)cameraPrivacyButtonPressed:(id)sender {
     cameraPrivacy = !cameraPrivacy;
     if (cameraPrivacy == NO) {
-        [cameraPrivacyButton setImage:[UIImage imageNamed:@"cameraOnWhite.png"] forState:UIControlStateNormal];
+        [cameraPrivacyButton setImage:[UIImage imageNamed:@"cameraonwhite.png"] forState:UIControlStateNormal];
     } else {
-        [cameraPrivacyButton setImage:[UIImage imageNamed:@"cameraOff.png"] forState:UIControlStateNormal];
+        [cameraPrivacyButton setImage:[UIImage imageNamed:@"camera_off.png"] forState:UIControlStateNormal];
     }
     [vc setCameraPrivacy:cameraPrivacy];
+    
+    [plugin passDeviceStateEvent:@"CameraStateUpdated" muted:cameraPrivacy ? @"YES" : @"NO"];
 }
     
     // Handle the camera swap button being pressed. Cycle the camera.
@@ -472,6 +476,8 @@
 -(void) onSuccess {
     [logger Log:@"Successfully connected."];
     [self ConnectorStateUpdated:VC_CONNECTED statusText:@"Connected"];
+ 
+    [plugin passConnectEvent:@"Connected" reason: nil];
 }
     
     // Handle attempted connection failure.
@@ -480,17 +486,27 @@
     
     // Update UI to reflect connection failed
     [self ConnectorStateUpdated:VC_CONNECTION_FAILURE statusText:@"Connection failed"];
+    
+    [plugin passConnectEvent:@"Failure" reason: @"Unknown"];
 }
     
     //  Handle an existing session being disconnected.
 -(void) onDisconnected:(VCConnectorDisconnectReason)reason {
+    NSString* reasonString = nil;
+    
     if (reason == VCConnectorDisconnectReasonDisconnected) {
         [logger Log:@"Succesfully disconnected."];
         [self ConnectorStateUpdated:VC_DISCONNECTED statusText:@"Disconnected"];
+        
+        reasonString = @"Expected";
     } else {
         [logger Log:@"Unexpected disconnection."];
         [self ConnectorStateUpdated:VC_DISCONNECTED_UNEXPECTED statusText:@"Unexepected disconnection"];
+        
+        reasonString = @"Unexpected";
     }
+    
+    [plugin passConnectEvent:@"Disconnected" reason: reasonString];
 }
 
 // Implementation of VCConnectorIRegisterLocalCameraEventListener
