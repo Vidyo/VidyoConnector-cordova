@@ -123,14 +123,50 @@ var app = {
 };
  
 app.initialize();
- 
+
+var onVidyoEvent = {
+
+    onEvent: function(response) {
+        var event = response.event;
+
+        switch(response.event) {
+            case "Connected":
+                console.log("JS layer: connected to the conference");
+                break;
+
+            case "Disconnected":
+                var reason = response.reason;
+                console.log("JS layer: disconnected from the conference. Reason: " + reason);
+                break;
+            
+            case "Failure":
+                var reason = response.reason;
+                console.log("JS layer: Failure during connection. Reason: " + reason);
+                break; 
+
+            case "CameraStateUpdated":
+                var muted = response.muted;
+                console.log("JS layer: Received camera state updated. Muted: " + muted);
+                break;
+                
+            case "MicrophoneStateUpdated":
+                var muted = response.muted;
+                console.log("JS layer: Received microphone state updated. Muted: " + muted);
+                break;
+        }
+    }
+}
+
 function new_activity() {
+    /* Pass the callback to the native side */
+    VidyoIOPlugin.setCallback(onVidyoEvent);
+    
     var token = document.getElementById("token").value;
     var host = document.getElementById("host").value;
     var name = document.getElementById("name").value;
     var resource = document.getElementById("resource").value;
- 
-    VidyoIOPlugin.launchVidyoIO([token,host,name,resource]);
+    
+    VidyoIOPlugin.launch([token,host,name,resource]);
 }
 
 ```
@@ -182,27 +218,34 @@ Next, edit VidyoIOPlugin/src/android/VidyoIOPlugin.java and make sure it looks l
 
 package com.vidyo.plugin;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.util.Log;
+import android.widget.Toast;
 
-import org.apache.cordova.CordovaPlugin;
+import com.vidyo.vidyoconnector.EventAction;
+import com.vidyo.vidyoconnector.VidyoIOActivity;
+
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.vidyo.vidyoconnector.VidyoIOActivity;
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.widget.Toast;
 
 /**
  * This class echoes a string called from JavaScript.
  */
 public class VidyoIOPlugin extends CordovaPlugin {
+
+    private static final String TAG = "VidyoIOPlugin";
 
     private static final int PERMISSION_REQ_CODE = 0x7b;
 
@@ -212,23 +255,44 @@ public class VidyoIOPlugin extends CordovaPlugin {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
+    private JSONArray launchVidyoIOArguments;
+
+    private CallbackContext pluginCallback;
+
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
     }
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        Context context = cordova.getActivity().getApplicationContext();
         if (action.equals("launchVidyoIO")) {
-            this.openNewActivity(context, args);
+
+            /* Register to vidyo activity events */
+            EventBus.getDefault().register(this);
+
+            /* Store JS callback point */
+            this.pluginCallback = callbackContext;
+
+            this.openNewActivity(args);
             return true;
         }
         return false;
     }
 
-    private void openNewActivity(Context context, JSONArray args) throws JSONException {
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        /* Unregister from vidyo activity events */
+        EventBus.getDefault().unregister(this);
+    }
+
+    private void openNewActivity(JSONArray args) throws JSONException {
+        Context context = cordova.getActivity().getApplicationContext();
+
         /* Check for required permissions */
         if (!hasAllPermissions()) {
+            this.launchVidyoIOArguments = args;
             this.cordova.requestPermissions(this, PERMISSION_REQ_CODE, PERMISSIONS);
             return;
         }
@@ -244,6 +308,19 @@ public class VidyoIOPlugin extends CordovaPlugin {
         this.cordova.getActivity().startActivity(intent);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onVidyoEvent(EventAction eventAction) {
+        if (pluginCallback != null) {
+            PluginResult result = new PluginResult(PluginResult.Status.OK, eventAction.getJsonBody());
+            result.setKeepCallback(true);
+            pluginCallback.sendPluginResult(result);
+
+            Log.i(TAG, "Event reported: " + eventAction.getJsonBody());
+        } else {
+            Log.e(TAG, "JS callback context is null.");
+        }
+    }
+    
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
         if (requestCode == PERMISSION_REQ_CODE) {
@@ -255,7 +332,10 @@ public class VidyoIOPlugin extends CordovaPlugin {
             }
 
             /* Success */
-            Toast.makeText(cordova.getActivity(), "Permissions granted! Please proceed...", Toast.LENGTH_SHORT).show();
+            if (launchVidyoIOArguments != null) {
+                this.openNewActivity(launchVidyoIOArguments);
+                this.launchVidyoIOArguments = null;
+            }
         }
     }
 
@@ -273,10 +353,43 @@ Now edit VidyoIOPlugin/www/VidyoIOPlugin.js and create a binding to the native m
 
 ```
 var exec = require('cordova/exec');
-function plugin() {
+
+var jsCallback;
+
+function VidyoIOPlugin() {}
+
+/**
+ * Handle callback from native side
+ * 
+ * @param {JSON} response 
+ */
+var nativeResponseCallback = function(response) {
+    console.log("Received native callback: " + JSON.stringify(response));
+    jsCallback.onEvent(response);
 }
-plugin.prototype.launchVidyoIO = function(args) { exec(function(res){}, function(err){}, "VidyoIOPlugin", "launchVidyoIO", args); }
-module.exports = new plugin();
+
+/**
+ * Handle error from native side
+ * 
+ * @param {*} error 
+ */
+var nativeErrorCallback = function(error) {
+    console.log("Error from native side: " + error);
+}
+
+VidyoIOPlugin.prototype.setCallback = function(callback) {
+    console.log("Callback to JS has been provided");
+    jsCallback = callback;
+}
+
+/**
+ * Launch conference activity and pass the callbacks
+ */
+VidyoIOPlugin.prototype.launch = function(args) {
+    exec(nativeResponseCallback, nativeErrorCallback, "VidyoIOPlugin", "launchVidyoIO", args);
+}
+
+module.exports = new VidyoIOPlugin();
 
 ```
 
@@ -347,6 +460,7 @@ android:label="@string/app_name" >
 <source-file src="src/android/res/values/styles.xml" target-dir="res/values" />
 <source-file src="src/android/res/values-w820dp/dimens.xml" target-dir="res/values-w820dp" />
 <framework src="com.android.support:appcompat-v7:23.0.0" />
+<framework src="org.greenrobot:eventbus:3.1.1" />
 </platform>
 </plugin>
 
