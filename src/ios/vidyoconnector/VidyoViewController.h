@@ -65,6 +65,10 @@ enum VIDYO_CONNECTOR_STATE {
 - (IBAction)microphonePrivacyButtonPressed:(id)sender;
 - (IBAction)cameraSwapButtonPressed:(id)sender;
 - (IBAction)toggleToolbar:(UITapGestureRecognizer *)sender;
+
+/* Open for plugin extension */
+- (void) disconnect;
+- (void) close;
     
 @end
 #endif // VIDYOVIEWCONTROLLER_H_INCLUDED

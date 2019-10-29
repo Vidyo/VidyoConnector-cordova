@@ -90,6 +90,18 @@
     [self.viewController presentViewController:self.vidyoViewController animated:YES completion:nil];
 }
 
+- (void)disconnect:(CDVInvokedUrlCommand *)command {
+    if (self.vidyoViewController != nil) {
+        [self.vidyoViewController disconnect];
+    }
+}
+
+- (void)release:(CDVInvokedUrlCommand *)command {
+    if (self.vidyoViewController != nil) {
+        [self.vidyoViewController close];
+    }
+}
+
 - (void)destroy {
     self.vidyoViewController.plugin = nil;
     self.vidyoViewController = nil;

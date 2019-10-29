@@ -16,7 +16,10 @@
 @synthesize connectionSpinner, toolbarStatusText, bottomControlSeparator;
 @synthesize plugin;
     
-- (void)close {
+#pragma mark -
+#pragma mark Plugin actions
+
+- (void) close {
     [vc disconnect];
 
     __weak UIViewController* weakSelf = self;
@@ -35,6 +38,12 @@
         [weakSelf removeFromParentViewController];
         [weakSelf.navigationController removeFromParentViewController];
     });
+}
+
+- (void) disconnect {
+    [toolbarStatusText setText:@"Disconnecting..."];
+    
+    [vc disconnect];
 }
     
 #pragma mark -
@@ -402,9 +411,7 @@
     // If the toggleConnectButton is the callEndImage, then either user is connected to a resource or is in the process
     // of connecting to a resource; call VidyoConnectorDisconnect to disconnect or abort the connection attempt
     if ([toggleConnectButton imageForState:UIControlStateNormal] == callEndImage) {
-        [toolbarStatusText setText:@"Disconnecting..."];
-        
-        [vc disconnect];
+        [self disconnect];
     } else {
         // Abort the Connect call if resourceId is invalid. It cannot contain empty spaces or "@".
         NSString *trimmedResourceId = [[resourceId text] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
