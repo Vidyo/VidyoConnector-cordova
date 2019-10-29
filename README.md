@@ -169,6 +169,24 @@ function new_activity() {
     VidyoIOPlugin.launch([token,host,name,resource]);
 }
 
+/*
+ * Disconnect from the call from JS layer. 
+ * Would fallback into 'Disconnected' callback 
+ */
+function disconnect() {
+    console.log("JS layer: disconnect requested");
+    VidyoIOPlugin.disconnect();
+}
+
+/* 
+ * Release and close native plugin from JS layer. 
+ * You have to disconnect first. This methond won't work otherwise.
+ */
+function release() {
+    console.log("JS layer: release requested");
+    VidyoIOPlugin.release();
+}
+
 ```
 #### Android
 
@@ -389,6 +407,22 @@ VidyoIOPlugin.prototype.launch = function(args) {
     exec(nativeResponseCallback, nativeErrorCallback, "VidyoIOPlugin", "launchVidyoIO", args);
 }
 
+/**
+ * Disconnect from the conference
+ */
+VidyoIOPlugin.prototype.disconnect = function() {
+    console.log("Trigger disconnect on native side.");
+    exec(function(){}, nativeErrorCallback, "VidyoIOPlugin", "disconnect", null);
+}
+
+/**
+ * Wrap up the plugin screen and release the connector
+ */
+VidyoIOPlugin.prototype.release = function() {
+    console.log("Trigger release on native side.");
+    exec(function(){}, nativeErrorCallback, "VidyoIOPlugin", "release", null);
+}
+
 module.exports = new VidyoIOPlugin();
 
 ```
@@ -429,10 +463,13 @@ android:label="@string/app_name" >
 </intent-filter>
 </activity>
 </config-file>
-<source-file src="src/android/VidyoIOPlugin.java" target-dir="src/com/vidyo/plugin/VidyoIOPlugin" />
+<source-file src="src/android/VidyoIOPlugin.java" target-dir="src/com/vidyo/plugin" />
 <source-file src="src/android/com/vidyo/vidyoconnector/VidyoIOActivity.java" target-dir="src/com/vidyo/vidyoconnector" />
 <source-file src="src/android/com/vidyo/vidyoconnector/VidyoConnector.java" target-dir="src/com/vidyo/vidyoconnector" />
+<source-file src="src/android/com/vidyo/vidyoconnector/EventAction.java" target-dir="src/com/vidyo/vidyoconnector" />
+<source-file src="src/android/com/vidyo/vidyoconnector/TriggerAction.java" target-dir="src/com/vidyo/vidyoconnector" />
 <source-file src="src/android/com/vidyo/vidyoconnector/Logger.java" target-dir="src/com/vidyo/vidyoconnector" />
+
 <source-file src="src/android/lib/android/vidyoclient.jar" target-dir="libs" />
 <source-file src="src/android/lib/android/arm64-v8a/libVidyoClient.so" target-dir="libs/arm64-v8a" />
 <source-file src="src/android/lib/android/armeabi-v7a/libVidyoClient.so" target-dir="libs/armeabi-v7a" />
