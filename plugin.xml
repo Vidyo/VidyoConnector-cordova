@@ -35,7 +35,7 @@
 				</activity>
 		</config-file>
 		
-		<source-file src="src/android/VidyoIOPlugin.java" target-dir="src/com/vidyo/plugin/VidyoIOPlugin" />
+		<source-file src="src/android/VidyoIOPlugin.java" target-dir="src/com/vidyo/plugin" />
 		<source-file src="src/android/com/vidyo/vidyoconnector/VidyoIOActivity.java" target-dir="src/com/vidyo/vidyoconnector" />
 		<source-file src="src/android/com/vidyo/vidyoconnector/VidyoConnector.java" target-dir="src/com/vidyo/vidyoconnector" />
 		<source-file src="src/android/com/vidyo/vidyoconnector/Logger.java" target-dir="src/com/vidyo/vidyoconnector" />
