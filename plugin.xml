@@ -40,6 +40,7 @@
 		<source-file src="src/android/com/vidyo/vidyoconnector/VidyoConnector.java" target-dir="src/com/vidyo/vidyoconnector" />
 		<source-file src="src/android/com/vidyo/vidyoconnector/Logger.java" target-dir="src/com/vidyo/vidyoconnector" />
 		<source-file src="src/android/com/vidyo/vidyoconnector/EventAction.java" target-dir="src/com/vidyo/vidyoconnector" />
+		<source-file src="src/android/com/vidyo/vidyoconnector/TriggerAction.java" target-dir="src/com/vidyo/vidyoconnector" />
 
 		<source-file src="src/android/lib/android/vidyoclient.jar" target-dir="libs" />
         <source-file src="src/android/lib/android/arm64-v8a/libVidyoClient.so" target-dir="libs/arm64-v8a" />

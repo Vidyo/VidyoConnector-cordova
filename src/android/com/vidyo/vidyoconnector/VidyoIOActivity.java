@@ -24,6 +24,8 @@ import com.vidyo.VidyoClient.Endpoint.LogRecord;
 import com.vidyo.vidyoiohybrid.R;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 public class VidyoIOActivity extends Activity implements Connector.IConnect, Connector.IRegisterLogEventListener, Connector.IRegisterLocalCameraEventListener {
 
@@ -73,6 +75,8 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
     protected void onCreate(Bundle savedInstanceState) {
         mLogger.Log("onCreate");
         super.onCreate(savedInstanceState);
+
+        EventBus.getDefault().register(this);
 
         setContentView(R.layout.activity_main);
 
@@ -223,6 +227,23 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
         super.onStop();
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onActionRequested(TriggerAction triggerAction) {
+        switch (triggerAction) {
+            case DISCONNECT:
+                if (mVidyoConnector != null) {
+                    triggerDisconnect();
+                }
+                break;
+            case RELEASE:
+                /* Wrap up the plugin activity by destroying it. This would call onDestroy and release the connector. */
+                if (mVidyoConnector != null && mVidyoConnectorState != VIDYO_CONNECTOR_STATE.VC_CONNECTED) {
+                    finish();
+                }
+                break;
+        }
+    }
+
     @Override
     protected void onDestroy() {
         mLogger.Log("onDestroy");
@@ -236,6 +257,7 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
             mVidyoConnector = null;
         }
 
+        EventBus.getDefault().unregister(this);
         super.onDestroy();
     }
 
@@ -361,18 +383,22 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
             }
             mLogger.Log("VidyoConnectorConnect status = " + status);
         } else {
-            // The button just switched to the callStart image: The user is either connected to a resource
-            // or is in the process of connecting to a resource; call VidyoConnectorDisconnect to either disconnect
-            // or abort the connection attempt.
-            // Change the button back to the callEnd image because do not want to assume that the Disconnect
-            // call will actually end the call. Need to wait for the callback to be received
-            // before swapping to the callStart image.
-            mToggleConnectButton.setChecked(true);
-
-            mToolbarStatus.setText("Disconnecting...");
-
-            mVidyoConnector.disconnect();
+            triggerDisconnect();
         }
+    }
+
+    private void triggerDisconnect() {
+        // The button just switched to the callStart image: The user is either connected to a resource
+        // or is in the process of connecting to a resource; call VidyoConnectorDisconnect to either disconnect
+        // or abort the connection attempt.
+        // Change the button back to the callEnd image because do not want to assume that the Disconnect
+        // call will actually end the call. Need to wait for the callback to be received
+        // before swapping to the callStart image.
+        mToggleConnectButton.setChecked(true);
+
+        mToolbarStatus.setText("Disconnecting...");
+
+        mVidyoConnector.disconnect();
     }
 
     // Toggle the microphone privacy

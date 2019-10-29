@@ -35,4 +35,20 @@ VidyoIOPlugin.prototype.launch = function(args) {
     exec(nativeResponseCallback, nativeErrorCallback, "VidyoIOPlugin", "launchVidyoIO", args);
 }
 
+/**
+ * Disconnect from the conference
+ */
+VidyoIOPlugin.prototype.disconnect = function() {
+    console.log("Trigger disconnect on native side.");
+    exec(function(){}, nativeErrorCallback, "VidyoIOPlugin", "disconnect", null);
+}
+
+/**
+ * Wrap up the plugin screen and release the connector
+ */
+VidyoIOPlugin.prototype.release = function() {
+    console.log("Trigger release on native side.");
+    exec(function(){}, nativeErrorCallback, "VidyoIOPlugin", "release", null);
+}
+
 module.exports = new VidyoIOPlugin();

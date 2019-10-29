@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.vidyo.vidyoconnector.EventAction;
+import com.vidyo.vidyoconnector.TriggerAction;
 import com.vidyo.vidyoconnector.VidyoIOActivity;
 
 import org.apache.cordova.CallbackContext;
@@ -20,7 +21,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -47,17 +47,28 @@ public class VidyoIOPlugin extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (action.equals("launchVidyoIO")) {
+        Log.i(TAG, "Received action from JS layer: " + action);
 
-            /* Register to vidyo activity events */
-            EventBus.getDefault().register(this);
+        switch (action) {
+            case "launchVidyoIO":
+                /* Register to vidyo activity events */
+                EventBus.getDefault().register(this);
 
-            /* Store JS callback point */
-            this.pluginCallback = callbackContext;
+                /* Store JS callback point */
+                this.pluginCallback = callbackContext;
 
-            this.openNewActivity(args);
-            return true;
+                this.openNewActivity(args);
+                return true;
+            case "disconnect":
+                /* Send disconnect action to plugin's activity */
+                EventBus.getDefault().post(TriggerAction.DISCONNECT);
+                return true;
+            case "release":
+                /* Send release action to plugin's activity */
+                EventBus.getDefault().post(TriggerAction.RELEASE);
+                return true;
         }
+
         return false;
     }
 
