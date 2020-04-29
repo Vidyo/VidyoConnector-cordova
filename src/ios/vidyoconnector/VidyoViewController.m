@@ -150,11 +150,6 @@
                                              selector:@selector(appWillTerminate:)
                                                  name:UIApplicationWillTerminateNotification
                                                object:nil];
-}
-    
-- (void)viewWillAppear:(BOOL)animated {
-    [logger Log:@"VidyoViewController::viewWillAppear called."];
-    [super viewWillAppear:animated];
     
     // register for keyboard notifications
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -177,10 +172,10 @@
         [self RefreshUI];
     }
 }
-    
-- (void)viewWillDisappear:(BOOL)animated {
-    [logger Log:@"VidyoViewController::viewWillDisappear called."];
-    [super viewWillDisappear:animated];
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [logger Log:@"VidyoViewController::viewDidDisappear called."];
+    [super viewDidDisappear:animated];
     
     // unregister for keyboard notifications while not visible.
     [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -194,8 +189,16 @@
     // Deregister from any/all notifications.
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
+    [vc hideView: &videoView];
+
     lastSelectedCamera = nil;
     
+    [vc unregisterLocalCameraEventListener];
+    
+    [vc selectLocalCamera: nil];
+    [vc selectLocalMicrophone: nil];
+    [vc selectLocalSpeaker: nil];
+
     // Release all acquired resources
     [vc disable];
     vc = nil;
