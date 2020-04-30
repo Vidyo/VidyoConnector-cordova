@@ -52,7 +52,9 @@ public class VidyoIOPlugin extends CordovaPlugin {
         switch (action) {
             case "launchVidyoIO":
                 /* Register to vidyo activity events */
-                EventBus.getDefault().register(this);
+                if (!EventBus.getDefault().hasSubscriberForEvent(EventAction.class)) {
+                    EventBus.getDefault().register(this);
+                }
 
                 /* Store JS callback point */
                 this.pluginCallback = callbackContext;
@@ -77,7 +79,9 @@ public class VidyoIOPlugin extends CordovaPlugin {
         super.onDestroy();
 
         /* Unregister from vidyo activity events */
-        EventBus.getDefault().unregister(this);
+        if (EventBus.getDefault().hasSubscriberForEvent(EventAction.class)) {
+            EventBus.getDefault().unregister(this);
+        }
     }
 
     private void openNewActivity(JSONArray args) throws JSONException {
