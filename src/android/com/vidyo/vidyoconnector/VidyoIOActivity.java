@@ -21,13 +21,17 @@ import com.vidyo.VidyoClient.Device.Device;
 import com.vidyo.VidyoClient.Device.LocalCamera;
 import com.vidyo.VidyoClient.Endpoint.LogRecord;
 
+import com.vidyo.VidyoClient.Endpoint.Participant;
 import com.vidyo.vidyoiohybrid.R;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-public class VidyoIOActivity extends Activity implements Connector.IConnect, Connector.IRegisterLogEventListener, Connector.IRegisterLocalCameraEventListener {
+import java.util.ArrayList;
+
+public class VidyoIOActivity extends Activity implements Connector.IConnect, Connector.IRegisterLogEventListener,
+        Connector.IRegisterLocalCameraEventListener, Connector.IRegisterParticipantEventListener {
 
     enum VIDYO_CONNECTOR_STATE {
         VC_CONNECTED,
@@ -75,6 +79,7 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
     protected void onCreate(Bundle savedInstanceState) {
         mLogger.Log("onCreate");
         super.onCreate(savedInstanceState);
+    	getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         EventBus.getDefault().register(this);
 
@@ -491,6 +496,30 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
 
     @Override
     public void onLocalCameraStateUpdated(LocalCamera localCamera, Device.DeviceState deviceState) {
+
+    }
+
+    /*
+     *  Participant Action Events
+     */
+
+    @Override
+    public void onParticipantJoined(Participant participant) {
+        // Handle participant joined
+    }
+
+    @Override
+    public void onParticipantLeft(Participant participant) {
+        // Handle participant left
+    }
+
+    @Override
+    public void onDynamicParticipantChanged(ArrayList<Participant> arrayList) {
+
+    }
+
+    @Override
+    public void onLoudestParticipantChanged(Participant participant, boolean b) {
 
     }
 }

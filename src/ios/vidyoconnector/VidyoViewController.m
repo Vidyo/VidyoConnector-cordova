@@ -15,37 +15,7 @@
 @synthesize token, resourceId, host, displayName;
 @synthesize connectionSpinner, toolbarStatusText, bottomControlSeparator;
 @synthesize plugin;
-    
-#pragma mark -
-#pragma mark Plugin actions
-
-- (void) close {
-    [vc disconnect];
-
-    __weak UIViewController* weakSelf = self;
-    
-    if ((self.plugin != nil) && [self.plugin respondsToSelector:@selector(destroy)]) {
-        [self.plugin destroy];
-    }
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if([weakSelf respondsToSelector:@selector(presentingViewController)]) {
-            [[weakSelf presentingViewController] dismissViewControllerAnimated:YES completion:nil];
-        } else {
-            [[weakSelf parentViewController] dismissViewControllerAnimated:YES completion:nil];
-        }
         
-        [weakSelf removeFromParentViewController];
-        [weakSelf.navigationController removeFromParentViewController];
-    });
-}
-
-- (void) disconnect {
-    [toolbarStatusText setText:@"Disconnecting..."];
-    
-    [vc disconnect];
-}
-    
 #pragma mark -
 #pragma mark View Lifecycle
     
@@ -338,7 +308,39 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     [[self view] endEditing:YES];
 }
+
+#pragma mark -
+#pragma mark Plugin actions
+
+- (void) close {
+    if ([vc getState] == VCConnectorStateIdle || [vc getState] == VCConnectorStateReady) {
+        __weak UIViewController* weakSelf = self;
+        
+        if ((self.plugin != nil) && [self.plugin respondsToSelector:@selector(destroy)]) {
+            [self.plugin destroy];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if([weakSelf respondsToSelector:@selector(presentingViewController)]) {
+                [[weakSelf presentingViewController] dismissViewControllerAnimated:YES completion:nil];
+            } else {
+                [[weakSelf parentViewController] dismissViewControllerAnimated:YES completion:nil];
+            }
+            
+            [weakSelf removeFromParentViewController];
+            [weakSelf.navigationController removeFromParentViewController];
+        });
+    } else {
+        [vc disconnect];
+    }
+}
+
+- (void) disconnect {
+    [toolbarStatusText setText:@"Disconnecting..."];
     
+    [vc disconnect];
+}
+
 #pragma mark -
 #pragma mark App UI Updates
     
@@ -498,6 +500,7 @@
     [self ConnectorStateUpdated:VC_CONNECTION_FAILURE statusText:@"Connection failed"];
     
     [plugin passConnectEvent:@"Failure" reason: @"Unknown"];
+    [self close];
 }
     
     //  Handle an existing session being disconnected.
@@ -517,6 +520,7 @@
     }
     
     [plugin passConnectEvent:@"Disconnected" reason: reasonString];
+    [self close];
 }
 
 // Implementation of VCConnectorIRegisterLocalCameraEventListener
@@ -543,5 +547,24 @@
 -(void) onLog:(VCLogRecord*)logRecord {
     [logger LogClientLib:logRecord.message];
 }
+
+#pragma mark -
+#pragma mark VidyoConnector Participant Event
+
+- (void)onParticipantJoined:(VCParticipant *)participant {
+    // Handle participant join event
+}
+
+- (void)onParticipantLeft:(VCParticipant *)participant {
+    // Handle participant left event
+}
+
+- (void)onDynamicParticipantChanged:(NSMutableArray *)participants {
     
+}
+
+- (void)onLoudestParticipantChanged:(VCParticipant *)participant AudioOnly:(BOOL)audioOnly {
+    
+}
+
 @end

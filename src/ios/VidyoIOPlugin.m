@@ -85,6 +85,11 @@
         self.vidyoViewController = [[VidyoViewController alloc] init];
     }
     
+    /* Disable slide down */
+    if (@available(iOS 13.0, *)) {
+        self.vidyoViewController.modalInPresentation = TRUE;
+    }
+    
     self.vidyoViewController.plugin = self;
     
     [self.viewController presentViewController:self.vidyoViewController animated:YES completion:nil];
