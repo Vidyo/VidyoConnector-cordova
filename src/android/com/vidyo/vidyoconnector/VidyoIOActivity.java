@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
@@ -166,9 +165,10 @@ public class VidyoIOActivity extends Activity implements Connector.IConnect, Con
                             mVidyoConnector = new Connector(mVideoFrame,
                                     Connector.ConnectorViewStyle.VIDYO_CONNECTORVIEWSTYLE_Default,
                                     16,
-                                    "debug@VidyoClient info@VidyoConnector warning ",
-                                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/VidyoIOAndroid.log",
+                                    "debug@VidyoClient info@VidyoConnector warning",
+                                    "",
                                     0);
+
                             mLogger.Log("Version is " + mVidyoConnector.getVersion());
 
                             if (mVidyoConnector != null) {
